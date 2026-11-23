@@ -23,14 +23,14 @@ body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;backgro
 .time .rl{font-size:14px;color:#888}
 .hint{font-size:12px;color:#aaa;text-align:center;margin-top:10px}
 .nav{width:100%;max-width:640px;display:flex;gap:8px;padding:0 16px 16px}
-.nav button{flex:1;border:0;border-radius:12px;padding:14px;font-size:16px;cursor:pointer;background:#e3e3df}
+.nav button{flex:1;border:0;border-radius:12px;padding:14px 6px;font-size:16px;white-space:nowrap;cursor:pointer;background:#e3e3df}
 .nav button.next{flex:2;background:#3b6ef5;color:#fff}
 .end{align-items:center;justify-content:center;text-align:center}.end h2{font-size:30px}.end p{color:#777}
 </style></head><body>
 <div class="top"><div class="tabs" id="tabs"></div>
 <div class="meta"><span id="dname"></span><span id="pos"></span></div><div class="bar"><i id="pb"></i></div></div>
 <div class="card" id="card" onclick="tap()"></div>
-<div class="nav"><button onclick="prev()">← 이전</button><button onclick="pauseT(event)" id="pz">⏸ 타이머</button><button class="next" onclick="next()">다음 →</button></div>
+<div class="nav"><button onclick="prev()">← 이전</button><button onclick="pauseT(event)" id="pz">⏸ 정지</button><button class="next" onclick="next()">다음 →</button></div>
 <script>
 const IMG={"hurdler": "hurdler.jpg", "burpee": "burpee.jpg", "dblunge": "dblunge.gif", "dbcurl": "dbcurl.gif", "pike": "pike.png", "spiderman": "spiderman.jpg", "kneel_rotate": "kneel_rotate.jpg", "kickthrough": "kickthrough.jpg", "sprinter": "sprinter.jpg", "butterfly": "butterfly.webp", "camel": "camel.jpg", "clamshell": "clamshell.gif", "lizard": "lizard.webp", "cossack": "cossack.jpg", "windmill": "windmill.jpg", "neckroll": "neckroll.jpg", "wgs": "wgs.jpg", "lateral_lunge": "lateral_lunge.png", "kneecircle": "kneecircle.jpg", "plank": "plank.gif", "goodmorning": "goodmorning.jpg", "pullup": "pullup.gif", "goblet": "goblet.jpg", "mermaid": "mermaid.jpg", "deadlift": "deadlift.gif", "tspine": "tspine.jpg", "crossarm": "crossarm.png", "shouldertap": "shouldertap.jpg", "figure4twist": "figure4twist.png", "halo": "halo.jpg", "hundred": "hundred.jpg", "dbpress": "dbpress.gif", "dbrow": "dbrow.gif", "vup": "vup.jpg", "n9090": "n9090.png", "hangknee": "hangknee.gif", "downdog": "downdog.jpg", "sideplank": "sideplank.gif", "rdl": "rdl.gif", "sphinx": "sphinx.jpg", "swimming": "swimming.jpg", "shoulderroll": "shoulderroll.jpg", "wristankle": "wristankle.jpg", "mountain": "mountain.png", "frog": "frog.jpg", "kbswing": "kbswing.jpg", "crab_reach": "crab_reach.jpg", "russian": "russian.gif", "catcow": "catcow.webp", "pushup": "pushup.gif", "sidebend": "sidebend.jpg", "crab_toe": "crab_toe.jpg", "pullthrough": "pullthrough.jpg", "prone_pec": "prone_pec.jpg", "superman": "superman.jpg", "kbrow": "kbrow.gif", "pigeon": "pigeon.webp", "legraise": "legraise.gif", "happybaby": "happybaby.png", "inchworm": "inchworm.jpg", "thread": "thread.png", "deadbug": "deadbug.gif", "puppy": "puppy.jpg", "open_gate": "open_gate.jpg", "wiper": "wiper.webp", "chinup": "chinup.gif", "openbook": "openbook.jpg", "doorchest": "doorchest.gif", "figure4": "figure4.png", "kneel_adductor": "kneel_adductor.png", "deadhang": "deadhang.png"};
 const P=['① 관절 풀기','② 스트레칭','③ 메인 운동','④ 마무리'];
@@ -131,7 +131,7 @@ el.innerHTML=`<div class="sec">${x.s}${phaseInfo(day,i)}</div><h2>${x.n}</h2>${x
 if(x.sec)startT(x.sec)}
 function startT(s){clearInterval(tm);left=s;paused=false;draw();tm=setInterval(()=>{if(paused)return;left--;draw();if(left>0&&left<=3)tick();if(left<=0){clearInterval(tm);beep()}},1000)}
 function tap(){const day=D[cur],i=pos[cur]||0,x=day.cards[i];if(x&&x.rest&&!resting){resting=true;document.getElementById('card').classList.add('resting');document.getElementById('rl').textContent='휴식 중 · 끝나면 카드 누르기';startT(x.rest);return}next()}
-function draw(){const e=document.getElementById('cd');if(!e)return;if(left<=0){e.textContent='✓';e.className='cd done'}else{e.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');e.className='cd'}document.getElementById('pz').textContent=paused?'▶ 계속':'⏸ 타이머'}
+function draw(){const e=document.getElementById('cd');if(!e)return;if(left<=0){e.textContent='✓';e.className='cd done'}else{e.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');e.className='cd'}document.getElementById('pz').textContent=paused?"▶ 계속":"⏸ 정지"}
 function pauseT(e){e.stopPropagation();paused=!paused;draw()}
 function save(){localStorage.setItem(K,JSON.stringify(pos))}
 function next(){const n=D[cur].cards.length;let i=pos[cur]||0;pos[cur]=i>=n?0:i+1;save();show()}
