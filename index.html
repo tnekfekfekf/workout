@@ -1,0 +1,147 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JYP식 30분 운동 카드</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="운동카드"><meta name="theme-color" content="#f3f3f0">
+<style>
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;background:#f3f3f0;color:#222;display:flex;flex-direction:column;align-items:center}
+.top{width:100%;max-width:640px;padding:14px 16px 6px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:0;border-radius:16px;padding:7px 14px;background:#e3e3df;font-size:14px;cursor:pointer}
+.tabs button.on{background:#3b6ef5;color:#fff}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:#777;margin:10px 2px 6px}
+.bar{height:5px;background:#e3e3df;border-radius:3px}.bar i{display:block;height:100%;background:#3b6ef5;border-radius:3px;transition:width .2s}
+.card{flex:1;width:calc(100% - 32px);max-width:608px;margin:10px 16px;background:#fff;border-radius:18px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px 22px;display:flex;flex-direction:column;cursor:pointer;user-select:none;min-height:0}
+.card.resting{background:#eef3ff}
+.sec{font-size:13px;color:#3b6ef5;font-weight:600}
+.card h2{font-size:26px;margin:6px 0 8px;line-height:1.25}
+.img{display:flex;justify-content:center;margin:4px 0 10px;min-height:0}
+.img img{max-width:100%;max-height:34vh;border-radius:10px;object-fit:contain}
+.cue{font-size:17px;line-height:1.5;color:#444;white-space:pre-line}
+.time{margin-top:auto;padding-top:14px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.time .amt{font-size:24px;font-weight:700}
+.time .cd{font-size:40px;font-weight:700;color:#3b6ef5;font-variant-numeric:tabular-nums}
+.time .cd.done{color:#2a9d5c}
+.time .rl{font-size:14px;color:#888}
+.hint{font-size:12px;color:#aaa;text-align:center;margin-top:10px}
+.nav{width:100%;max-width:640px;display:flex;gap:8px;padding:0 16px 16px}
+.nav button{flex:1;border:0;border-radius:12px;padding:14px;font-size:16px;cursor:pointer;background:#e3e3df}
+.nav button.next{flex:2;background:#3b6ef5;color:#fff}
+.end{align-items:center;justify-content:center;text-align:center}.end h2{font-size:30px}.end p{color:#777}
+</style></head><body>
+<div class="top"><div class="tabs" id="tabs"></div>
+<div class="meta"><span id="dname"></span><span id="pos"></span></div><div class="bar"><i id="pb"></i></div></div>
+<div class="card" id="card" onclick="tap()"></div>
+<div class="nav"><button onclick="prev()">← 이전</button><button onclick="pauseT(event)" id="pz">⏸ 타이머</button><button class="next" onclick="next()">다음 →</button></div>
+<script>
+const IMG={"hurdler": "hurdler.jpg", "burpee": "burpee.jpg", "dblunge": "dblunge.gif", "dbcurl": "dbcurl.gif", "pike": "pike.png", "spiderman": "spiderman.jpg", "kneel_rotate": "kneel_rotate.jpg", "kickthrough": "kickthrough.jpg", "sprinter": "sprinter.jpg", "butterfly": "butterfly.webp", "camel": "camel.jpg", "clamshell": "clamshell.gif", "lizard": "lizard.webp", "cossack": "cossack.jpg", "windmill": "windmill.jpg", "neckroll": "neckroll.jpg", "wgs": "wgs.jpg", "lateral_lunge": "lateral_lunge.png", "kneecircle": "kneecircle.jpg", "plank": "plank.gif", "goodmorning": "goodmorning.jpg", "pullup": "pullup.gif", "goblet": "goblet.jpg", "mermaid": "mermaid.jpg", "deadlift": "deadlift.gif", "tspine": "tspine.jpg", "crossarm": "crossarm.png", "shouldertap": "shouldertap.jpg", "figure4twist": "figure4twist.png", "halo": "halo.jpg", "hundred": "hundred.jpg", "dbpress": "dbpress.gif", "dbrow": "dbrow.gif", "vup": "vup.jpg", "n9090": "n9090.png", "hangknee": "hangknee.gif", "downdog": "downdog.jpg", "sideplank": "sideplank.gif", "rdl": "rdl.gif", "sphinx": "sphinx.jpg", "swimming": "swimming.jpg", "shoulderroll": "shoulderroll.jpg", "wristankle": "wristankle.jpg", "mountain": "mountain.png", "frog": "frog.jpg", "kbswing": "kbswing.jpg", "crab_reach": "crab_reach.jpg", "russian": "russian.gif", "catcow": "catcow.webp", "pushup": "pushup.gif", "sidebend": "sidebend.jpg", "crab_toe": "crab_toe.jpg", "pullthrough": "pullthrough.jpg", "prone_pec": "prone_pec.jpg", "superman": "superman.jpg", "kbrow": "kbrow.gif", "pigeon": "pigeon.webp", "legraise": "legraise.gif", "happybaby": "happybaby.png", "inchworm": "inchworm.jpg", "thread": "thread.png", "deadbug": "deadbug.gif", "puppy": "puppy.jpg", "open_gate": "open_gate.jpg", "wiper": "wiper.webp", "chinup": "chinup.gif", "openbook": "openbook.jpg", "doorchest": "doorchest.gif", "figure4": "figure4.png", "kneel_adductor": "kneel_adductor.png", "deadhang": "deadhang.png"};
+const P=['① 관절 풀기','② 스트레칭','③ 메인 운동','④ 마무리'];
+// t: 시간 카드  (단계,이름,방법,초,표시,이미지)
+const t=(s,n,cue,sec,amt,img)=>({s,n,cue,sec,amt:amt||fmt(sec),img});
+// sets: 세트 카드 (이름,방법,세트수,횟수,휴식초,이미지)
+const sets=(n,cue,k,reps,rest,img)=>Array.from({length:k},(_,i)=>({s:`${P[2]} · ${n} ${i+1}/${k}세트`,n,cue,amt:reps,rest:i<k-1||rest>0?rest:0,img}));
+function fmt(s){return s>=60?(Math.floor(s/60)+'분'+(s%60?' '+s%60+'초':'')):s+'초'}
+// ===== ① 관절 풀기: 매일 같은 백본 (JYP처럼 위에서 아래로, 재활하듯 천천히) =====
+const JOINT=[
+t(P[0],'목 돌리기','턱 살짝 당기고 천천히 반원 → 큰 원. 좌우 방향 바꾸기.',30,null,'neckroll'),
+t(P[0],'어깨 돌리기','손끝을 어깨에 얹고 팔꿈치로 큰 원. 앞으로 15초, 뒤로 15초.',30,null,'shoulderroll'),
+t(P[0],'팔 좌우 스윙','팔을 옆으로 크게 벌렸다 앞에서 교차.',30),
+t(P[0],'손목·발목 돌리기','깍지 끼고 손목 돌리기 + 한 발씩 발끝 대고 발목 돌리기.',40,null,'wristankle'),
+t(P[0],'서서 몸통 회전','팔 힘 빼고 몸통을 좌우로 돌리기.',30),
+t(P[0],'골반 돌리기','손은 허리, 골반으로 큰 원. 중간에 방향 바꾸기.',30),
+t(P[0],'오픈 더 게이트','무릎을 앞으로 들어 바깥으로 문 열듯 돌리기. 좌우 각 30초.',60,'좌우 각 30초','open_gate'),
+t(P[0],'무릎 돌리기','무릎 모으고 살짝 굽혀 손을 얹고 원 그리기. 양방향.',30,null,'kneecircle'),
+t(P[0],'캣카우','네발. 내쉬며 등 말기, 마시며 가슴 내밀기.',30,null,'catcow'),
+t(P[0],'네발 흉추 회전','한 손 머리 뒤, 팔꿈치를 반대 팔 밑으로 → 천장으로 열기. 좌우 각 30초.',60,'좌우 각 30초','tspine')];
+// ===== ② 스트레칭 (그날 메인 운동에 맞춤) =====
+const ST={
+hinge:[t(P[1],'다운독 종아리','ㅅ자 자세에서 뒤꿈치 번갈아 누르기.',30,null,'downdog'),
+ t(P[1],'스프린터 스트레칭','런지에서 손 짚고 앞다리 폈다 굽히기(햄스트링). 좌우 각 30초.',60,'좌우 각 30초','sprinter'),
+ t(P[1],'90/90 둔근','앞·뒷다리 90도로 앉아 앞 정강이 쪽으로 숙이기. 좌우 각 30초.',60,'좌우 각 30초','n9090'),
+ t(P[1],'데드행','풀업바에 매달려 어깨·광배 늘이기. 발 닿아도 됨.',30,null,'deadhang')],
+upper:[t(P[1],'문틀 가슴 스트레칭','문틀(벽)에 팔꿈치 걸고 몸을 앞으로. 좌우 각 30초.',60,'좌우 각 30초','doorchest'),
+ t(P[1],'팔 크로스 어깨','한 팔을 가슴 앞으로 당기기. 좌우 각 20초.',40,'좌우 각 20초','crossarm'),
+ t(P[1],'실 꿰기','네발에서 한 손을 반대 겨드랑이 밑으로 넣어 어깨 바닥에. 좌우 각 30초.',60,'좌우 각 30초','thread'),
+ t(P[1],'스핑크스 → 코브라','엎드려 팔꿈치 세우기 15초 → 팔 펴고 15초.',30,null,'sphinx')],
+hip:[t(P[1],'로킹 리자드','런지, 손은 앞발 안쪽. 골반 앞뒤로 흔들기. 좌우 각 30초.',60,'좌우 각 30초','lizard'),
+ t(P[1],'코사크 스쿼트','다리 넓게, 한쪽으로 앉으며 반대 다리 펴기. 좌우 번갈아.',30,null,'cossack'),
+ t(P[1],'90/90 좌우 전환','앉아서 양 무릎 좌우로 넘기기.',40,null,'n9090'),
+ t(P[1],'개구리 로킹','다리 넓게 손 짚고 엉덩이 앞뒤로.',40,null,'frog')],
+back:[t(P[1],'허들러 전굴','한 다리 펴고 반대 발은 허벅지 안쪽, 편 다리 쪽으로 숙이기. 좌우 각 30초.',60,'좌우 각 30초','hurdler'),
+ t(P[1],'비둘기','앞다리 접고 뒷다리 뒤로, 엎드리기. 좌우 각 30초.',60,'좌우 각 30초','pigeon'),
+ t(P[1],'옆으로 누워 흉추 열기','무릎 굽혀 옆으로 눕고 위 팔을 반대쪽으로 크게 열기. 좌우 각 30초.',60,'좌우 각 30초','openbook'),
+ t(P[1],'데드행','풀업바에 매달려 어깨·광배 늘이기.',30,null,'deadhang')],
+full:[t(P[1],'인치웜','손으로 걸어 나가 플랭크 → 걸어 들어오기.',40,null,'inchworm'),
+ t(P[1],'월드 그레이티스트','런지 → 같은 쪽 팔꿈치 바닥 쪽으로 → 그 팔을 천장으로 열기. 좌우 각 30초.',60,'좌우 각 30초','wgs'),
+ t(P[1],'다운독 종아리','뒤꿈치 번갈아 누르기.',30,null,'downdog'),
+ t(P[1],'머메이드','다리를 한쪽으로 빼고 앉아 반대 팔 넘겨 옆구리. 좌우 각 30초.',60,'좌우 각 30초','mermaid')]};
+// ===== ④ 마무리 =====
+const END=(a)=>[...a,t(P[3],'호흡 정리','편하게 누워 코로 4초 마시고 입으로 6초 내쉬기.',40)];
+const D=[
+{d:'월',t:'데드리프트 + 풀업',cards:[...JOINT,...ST.hinge,
+ ...sets('데드리프트 (가볍게 워밍업)','빈 봉/가벼운 무게로 동작 연습. 엉덩이 뒤로, 등 곧게.',1,'10회',60,'deadlift'),
+ ...sets('데드리프트','발 골반 너비, 봉은 정강이 가까이. 숨 마시고 배에 힘 → 바닥을 밀며 일어서기. 등 말지 않기.',4,'6~8회',90,'deadlift'),
+ ...sets('풀업','어깨 내리고 가슴을 봉 쪽으로. 안 되면 점프해서 올라가 3~5초 천천히 내려오기.',4,'최대 -1회',90,'pullup'),
+ ...sets('플랭크','팔꿈치 어깨 아래, 머리~발꿈치 일직선. 엉덩이 꽉.',2,'40초',30,'plank'),
+ ...END([t(P[3],'누워 4자 스트레칭','한 발목을 반대 무릎에 올리고 당기기. 좌우 각 30초.',60,'좌우 각 30초','figure4')])]},
+{d:'화',t:'아령 + 푸시업 + 복근',cards:[...JOINT,...ST.upper,
+ ...sets('푸시업','손 어깨너비, 몸 일직선. 가슴이 바닥 가까이. 힘들면 무릎 대고.',3,'10~15회',60,'pushup'),
+ ...sets('아령 숄더 프레스','앉거나 서서 아령을 어깨에서 머리 위로. 허리 젖히지 않기.',3,'10회',60,'dbpress'),
+ ...sets('아령 원암 로우','한 손·무릎 벤치(의자)에, 아령을 옆구리로 당기기. 좌우 각.',3,'좌우 각 10회',45,'dbrow'),
+ ...sets('아령 컬','팔꿈치 옆구리에 고정, 아령 들어올리기.',2,'12회',45,'dbcurl'),
+ t(P[2]+' · 복근','데드버그','누워 팔 천장, 무릎 90도. 반대 팔·다리 뻗기, 허리 바닥에 붙이기.',40,'40초','deadbug'),
+ t(P[2]+' · 복근','레그 레이즈','누워 다리 붙여 천장으로 → 천천히 내리기.',40,'40초','legraise'),
+ t(P[2]+' · 복근','사이드 플랭크','팔꿈치 짚고 옆으로 몸 일직선. 좌우 각 30초.',60,'좌우 각 30초','sideplank'),
+ ...END([t(P[3],'문틀 가슴 스트레칭','좌우 각 20초.',40,'좌우 각 20초','doorchest')])]},
+{d:'수',t:'케틀벨',cards:[...JOINT,...ST.hip,
+ ...sets('케틀벨 스윙','엉덩이 뒤로 빼며 다리 사이로 → 엉덩이를 앞으로 튕겨 가슴 높이. 팔 말고 엉덩이 힘.',5,'15회',45,'kbswing'),
+ ...sets('고블릿 스쿼트','케틀벨을 가슴에 안고 깊게 앉았다 일어서기.',3,'10회',60,'goblet'),
+ ...sets('케틀벨 원암 로우','한 손 짚고 케틀벨을 옆구리로 당기기. 좌우 각.',3,'좌우 각 10회',45,'kbrow'),
+ ...sets('케틀벨 헤일로','뿔 잡고 머리 둘레로 돌리기. 방향 번갈아.',2,'좌우 각 5바퀴',30,'halo'),
+ t(P[2]+' · 복근','러시안 트위스트','앉아 상체 살짝 뒤로, 케틀벨(또는 맨손)을 좌우로.',40,'40초','russian'),
+ t(P[2]+' · 복근','플랭크','40초.',40,'40초','plank'),
+ ...END([t(P[3],'해피 베이비','누워 발 잡고 무릎을 겨드랑이 쪽으로, 좌우로 살짝 흔들기.',40,null,'happybaby')])]},
+{d:'목',t:'루마니안 데드 + 친업 + 복근',cards:[...JOINT,...ST.back,
+ ...sets('루마니안 데드리프트','무릎 살짝만 굽히고 봉(아령)을 허벅지 따라 내리며 엉덩이 뒤로. 햄스트링 늘어나면 일어서기.',4,'8회',90,'rdl'),
+ ...sets('친업','손바닥이 나를 보게 잡고 턱이 봉 위로. 안 되면 천천히 내려오기만.',4,'최대 -1회',90,'chinup'),
+ ...sets('행잉 니레이즈','봉에 매달려 무릎을 가슴 쪽으로. 반동 없이.',2,'10회',45,'hangknee'),
+ t(P[2]+' · 복근','사이드 플랭크','좌우 각 30초.',60,'좌우 각 30초','sideplank'),
+ ...END([t(P[3],'누워 무릎 좌우 넘기기','무릎 세우고 천천히 좌우로.',40)])]},
+{d:'금',t:'전신 서킷 (전부 조금씩)',cards:[...JOINT,...ST.full,
+ ...[1,2,3,4].flatMap(r=>[
+  {s:`${P[2]} · 서킷 ${r}/4라운드`,n:'케틀벨 스윙',cue:'엉덩이 힘으로 튕기기.',amt:'15회',img:'kbswing'},
+  {s:`${P[2]} · 서킷 ${r}/4라운드`,n:'푸시업',cue:'몸 일직선.',amt:'10회',img:'pushup'},
+  {s:`${P[2]} · 서킷 ${r}/4라운드`,n:'아령 리버스 런지',cue:'아령 들고 한 발 뒤로 내려갔다 오기. 좌우 번갈아.',amt:'좌우 각 8회',img:'dblunge'},
+  {s:`${P[2]} · 서킷 ${r}/4라운드`,n:'풀업',cue:'안 되면 점프 후 천천히 내려오기.',amt:'5회',img:'pullup'},
+  {s:`${P[2]} · 서킷 ${r}/4라운드`,n:'플랭크',cue:'몸 일직선, 엉덩이 꽉.',amt:'40초',img:'plank',rest:r<4?90:0}]),
+ t(P[2]+' · 복근','레그 레이즈','누워 다리 붙여 천장으로 → 천천히 내리기.',40,'40초','legraise'),
+ ...END([t(P[3],'다리 털기','앉아서 다리 툴툴 털기.',20)])]}];
+const K='jyp_pos_v1';let pos=JSON.parse(localStorage.getItem(K)||'{}');
+const td=new Date().getDay();let cur=(td>=1&&td<=5)?td-1:0;let tm=null,left=0,paused=false,resting=false;
+const est=day=>Math.round(day.cards.reduce((a,x)=>a+(x.sec?x.sec+3:(35+(x.rest||0))),0)/60);
+function tabs(){document.getElementById('tabs').innerHTML=D.map((d,i)=>`<button class="${i===cur?'on':''}" onclick="sel(${i})">${d.d}</button>`).join('')}
+function sel(i){cur=i;tabs();show()}
+function phaseInfo(day,i){const ph=day.cards[i].s.split(' · ')[0];const all=day.cards.filter(y=>y.s.startsWith(ph));const k=day.cards.slice(0,i+1).filter(y=>y.s.startsWith(ph)).length;return ph===P[2]?'':` · ${k}/${all.length}`}
+function show(){clearInterval(tm);resting=false;const day=D[cur],i=pos[cur]||0,n=day.cards.length;
+document.getElementById('dname').textContent=`${day.d} · ${day.t} · 약 ${est(day)}분`;
+document.getElementById('pos').textContent=i<n?`${i+1} / ${n}`:'완료';document.getElementById('pb').style.width=(100*Math.min(i,n)/n)+'%';
+const el=document.getElementById('card');
+if(i>=n){el.className='card end';el.innerHTML=`<h2>오늘 운동 끝!</h2><p>${day.t}</p><p style="font-size:13px">카드를 누르면 처음부터 다시</p>`;return}
+const x=day.cards[i];el.className='card';
+let tb=x.sec?`<span class="amt">${x.amt}</span><span class="cd" id="cd"></span>`:`<span class="amt">${x.amt}</span>${x.rest?`<span class="rl" id="rl">세트 끝나면 카드 누르기 → 휴식 ${fmt(x.rest)}</span><span class="cd" id="cd"></span>`:''}`;
+el.innerHTML=`<div class="sec">${x.s}${phaseInfo(day,i)}</div><h2>${x.n}</h2>${x.img&&IMG[x.img]?`<div class="img"><img src="img/${IMG[x.img]}"></div>`:''}<div class="cue">${x.cue}</div><div class="time">${tb}</div><div class="hint">${x.rest?'한 번 누르면 휴식 타이머, 한 번 더 누르면 다음':'카드를 누르면 다음 동작'}</div>`;
+if(x.sec)startT(x.sec)}
+function startT(s){clearInterval(tm);left=s;paused=false;draw();tm=setInterval(()=>{if(paused)return;left--;draw();if(left>0&&left<=3)tick();if(left<=0){clearInterval(tm);beep()}},1000)}
+function tap(){const day=D[cur],i=pos[cur]||0,x=day.cards[i];if(x&&x.rest&&!resting){resting=true;document.getElementById('card').classList.add('resting');document.getElementById('rl').textContent='휴식 중 · 끝나면 카드 누르기';startT(x.rest);return}next()}
+function draw(){const e=document.getElementById('cd');if(!e)return;if(left<=0){e.textContent='✓';e.className='cd done'}else{e.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');e.className='cd'}document.getElementById('pz').textContent=paused?'▶ 계속':'⏸ 타이머'}
+function pauseT(e){e.stopPropagation();paused=!paused;draw()}
+function save(){localStorage.setItem(K,JSON.stringify(pos))}
+function next(){const n=D[cur].cards.length;let i=pos[cur]||0;pos[cur]=i>=n?0:i+1;save();show()}
+function prev(){pos[cur]=Math.max(0,(pos[cur]||0)-1);save();show()}
+let AC=null;
+function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const b=AC.createBuffer(1,1,22050),s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start(0)}catch(e){}}
+document.addEventListener('pointerdown',unlock,true);document.addEventListener('keydown',unlock,true);
+function tone(f,d,at,v){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;o.connect(g);g.connect(AC.destination);const t0=AC.currentTime+at;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(v,t0+.01);g.gain.setValueAtTime(v,t0+d-.03);g.gain.linearRampToValueAtTime(0,t0+d);o.start(t0);o.stop(t0+d+.02)}
+function tick(){tone(660,.12,0,.25)}
+function beep(){tone(1046,.25,0,.35);tone(1046,.25,.35,.35);tone(1318,.5,.7,.35);try{navigator.vibrate&&navigator.vibrate([200,100,200,100,400])}catch(e){}}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();tap()}if(e.key==='ArrowLeft')prev()});
+tabs();show();
+</script></body></html>
